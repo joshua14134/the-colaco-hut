@@ -1,0 +1,6 @@
+{
+  "name": "The Colaco Hut",
+  "description": "An award-winning, ultra-premium, cinematic, editorial-style luxury restaurant website for The Colaco Hut in Goa, combining Goan traditions and Portuguese heritage.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

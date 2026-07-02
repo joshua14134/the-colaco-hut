@@ -1,0 +1,165 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Admin {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("Staff") // Admin, Manager, Staff
+  phone        String?
+  username     String?
+  department   String?
+  profileImage String?
+  status       String   @default("Active") // Active, Inactive, Suspended
+  notes        String?  @db.Text
+  createdBy    String?
+  updatedBy    String?
+  lastLogin    DateTime?
+  loginCount   Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ManagerLog {
+  id        String   @id @default(uuid())
+  timestamp DateTime @default(now())
+  userId    String   // ID of the user performing the action (Owner/Admin)
+  userName  String?  // Name of the user performing the action
+  action    String   // e.g., "Manager Created", "Manager Updated", "Manager Deleted", "Password Reset"
+  details   String   @db.Text
+  ipAddress String?
+  browser   String?
+  device    String?
+}
+
+model Reservation {
+  id              String   @id
+  guests          String
+  date            String   // YYYY-MM-DD
+  time            String   // HH:MM
+  occasion        String
+  seating         String   // indoor / outdoor
+  name            String
+  phone           String
+  email           String
+  specialRequests String?  @db.Text
+  status          String   @default("Pending") // Pending, Confirmed, Cancelled, Seated, Completed
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model MenuItem {
+  id          String   @id @default(uuid())
+  name        String
+  category    String   // starters, seafood, goan, portuguese, desserts, cellar
+  price       Float
+  description String   @db.Text
+  recommended Boolean  @default(false)
+  bestSeller  Boolean  @default(false)
+  seasonal    Boolean  @default(false)
+  spicyLevel  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GalleryItem {
+  id          String   @id @default(uuid())
+  title       String
+  category    String   // atmosphere, cuisine, heritage, celebrations
+  imageUrl    String   @db.Text
+  description String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BlogPost {
+  id        String   @id @default(uuid())
+  title     String
+  excerpt   String   @db.Text
+  content   String   @db.Text
+  author    String
+  date      String
+  readTime  String
+  category  String   // Heritage, Chef Recipes, Wine Pairings, Goan Ambiance
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Subscriber {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  subscribedAt DateTime @default(now())
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String
+  subject   String
+  message   String   @db.Text
+  status    String   @default("Unread") // Unread, Read, Replied
+  replyText String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model JobPosition {
+  id                 String           @id @default(uuid())
+  title              String
+  department         String           // Culinary, Service, Beverage, Management
+  type               String           // Full-Time, Part-Time, Seasonal
+  experienceRequired String
+  description        String           @db.Text
+  requirements       Json
+  salaryRange        String?
+  active             Boolean          @default(true)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  applications       JobApplication[]
+}
+
+model JobApplication {
+  id          String      @id @default(uuid())
+  jobId       String
+  job         JobPosition @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobTitle    String
+  name        String
+  email       String
+  phone       String
+  experience  String      @db.Text
+  coverLetter String?     @db.Text
+  resumeUrl   String?     @db.Text
+  appliedAt   DateTime    @default(now())
+  status      String      @default("Pending") // Pending, Reviewed, Shortlisted, Rejected
+}
+
+model EventItem {
+  id             String   @id @default(uuid())
+  title          String
+  date           String   // Every Thursday Evening, etc.
+  time           String   // 19:30 onwards, etc.
+  description    String   @db.Text
+  pricePerPerson Float
+  imageUrl       String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Testimonial {
+  id        String   @id @default(uuid())
+  name      String
+  role      String
+  text      String   @db.Text
+  rating    Int      @default(5)
+  source    String   // Google Review, Michelin Guide, Luxe Digest, Goa Chronicle
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
