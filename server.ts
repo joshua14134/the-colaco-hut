@@ -28,7 +28,7 @@ import {
 } from './src/services/dbService';
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json());
 
@@ -922,25 +922,39 @@ app.get('/api/dashboard/stats', dbCheck, authenticateJWT, async (req: AuthReques
 
 
 // ---------------------- STATIC ASSETS & VITE SERVING ----------------------
-
 async function startServer() {
-  if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  }
+  try {
+    if (process.env.NODE_ENV !== "production") {
+      const vite = await createViteServer({
+        server: {
+          middlewareMode: true,
+        },
+        appType: "spa",
+      });
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`The Colaco Hut Luxury Backend Server running on http://localhost:${PORT}`);
-  });
+      app.use(vite.middlewares);
+    } else {
+      const distPath = path.join(process.cwd(), "dist");
+
+      app.use(express.static(distPath));
+
+      app.get("*", (req, res) => {
+        res.sendFile(path.join(distPath, "index.html"));
+      });
+    }
+
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log("==================================");
+      console.log("🚀 The Colaco Hut Server Started");
+      console.log(`🌍 Environment : ${process.env.NODE_ENV}`);
+      console.log(`🚪 Port        : ${PORT}`);
+      console.log("==================================");
+    });
+  } catch (err) {
+    console.error("Server failed to start");
+    console.error(err);
+    process.exit(1);
+  }
 }
 
 startServer();
