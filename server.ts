@@ -713,16 +713,16 @@ app.put('/api/managers/:id', dbCheck, authenticateJWT, requireRole(['Admin']), a
     }
 
     const updated = await managerService.update(id, {
-      name: parsed.name,
-      email: parsed.email,
-      phone: parsed.phone,
-      username: parsed.username,
-      department: parsed.department,
-      profileImage: parsed.profileImage,
-      status: parsed.status,
-      notes: parsed.notes,
-      updatedBy: req.user?.id
-    });
+  name: parsed.name,
+  email: parsed.email,
+  phone: parsed.phone ?? undefined,
+  username: parsed.username ?? undefined,
+  department: parsed.department ?? undefined,
+  profileImage: parsed.profileImage ?? undefined,
+  status: parsed.status,
+  notes: parsed.notes ?? undefined,
+  updatedBy: req.user?.id
+});
 
     // Logging
     const ip = req.ip || req.socket.remoteAddress;

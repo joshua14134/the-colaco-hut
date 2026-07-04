@@ -10,10 +10,16 @@ import { motion, AnimatePresence } from 'motion/react';
 import { MenuItem } from '../types';
 import GourmetAnalytics from './GourmetAnalytics';
 
+// ===========================
+// Portfolio Demo Mode
+// Set this to false to reconnect to your real backend API
+// ===========================
+const PORTFOLIO_MODE = true;
+
 export default function AdminSection() {
   const [token, setToken] = useState<string>(localStorage.getItem('admin_token') || '');
   const [user, setUser] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'stats' | 'reservations' | 'messages' | 'menu' | 'newsletter' | 'careers'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'reservations' | 'messages' | 'menu' | 'newsletter' | 'careers' | 'managers'>('stats');
 
   // Login form state
   const [email, setEmail] = useState('');
@@ -107,6 +113,43 @@ export default function AdminSection() {
     setLoginError('');
     setIsLoggingIn(true);
 
+    // ===========================
+    // Portfolio Demo Mode
+    // ===========================
+    if (PORTFOLIO_MODE) {
+      setTimeout(() => {
+        if (email === 'admin@colacohut.com' && password === 'ColacoHutAdmin2026!') {
+          const demoUser = {
+            id: '1',
+            name: 'Joshua Fernandes',
+            email,
+            role: 'Admin'
+          };
+          localStorage.setItem('admin_token', 'demo-token');
+          setToken('demo-token');
+          setUser(demoUser);
+        } else if (email === 'clara@colacohut.com' && password === 'ClaraManager2026!') {
+          const demoUser = {
+            id: '2',
+            name: "Clara D'Souza",
+            email,
+            role: 'Manager'
+          };
+          localStorage.setItem('admin_token', 'demo-token');
+          setToken('demo-token');
+          setUser(demoUser);
+        } else {
+          setLoginError('Invalid credentials');
+        }
+        setIsLoggingIn(false);
+      }, 800);
+
+      return;
+    }
+
+    // ===========================
+    // Real Backend
+    // ===========================
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -139,6 +182,121 @@ export default function AdminSection() {
   const fetchAllAdminData = async () => {
     if (!token) return;
     setIsLoadingData(true);
+
+    // ===========================
+    // Portfolio Demo Mode
+    // ===========================
+    if (PORTFOLIO_MODE) {
+      setStats({
+        pendingReservations: 12,
+        upcomingReservationsCount: 28,
+        unreadMessages: 6,
+        subscribersCount: 548,
+        recentApplicationsCount: 15
+      });
+
+      setReservations([
+        {
+          id: 'R001',
+          name: 'John Smith',
+          email: 'john@example.com',
+          phone: '9876543210',
+          guests: 4,
+          date: '2026-07-15',
+          time: '7:30 PM',
+          seating: 'indoor',
+          occasion: 'Birthday',
+          status: 'Pending',
+          specialRequests: 'Window seat'
+        },
+        {
+          id: 'R002',
+          name: 'Priya Nair',
+          email: 'priya@example.com',
+          phone: '9812345670',
+          guests: 2,
+          date: '2026-07-16',
+          time: '8:00 PM',
+          seating: 'outdoor',
+          occasion: 'Anniversary',
+          status: 'Confirmed',
+          specialRequests: ''
+        }
+      ]);
+
+      setMessages([
+        {
+          id: 'M001',
+          name: 'Emily Brown',
+          email: 'emily@example.com',
+          phone: '9999999999',
+          subject: 'Reservation',
+          message: 'Can I reserve a table for tonight?',
+          status: 'Unread'
+        },
+        {
+          id: 'M002',
+          name: 'Rahul Verma',
+          email: 'rahul@example.com',
+          phone: '9123456780',
+          subject: 'Private Event',
+          message: 'Do you host private dinners for 20 guests?',
+          status: 'Replied',
+          replyText: 'Yes, we do! Our events team will reach out shortly.'
+        }
+      ]);
+
+      setMenuItems([
+        {
+          id: '1',
+          name: 'Goan Prawn Curry',
+          category: 'goan',
+          price: 850,
+          description: 'Traditional Goan curry.',
+          recommended: true,
+          bestSeller: true,
+          seasonal: false,
+          spicyLevel: 2
+        },
+        {
+          id: '2',
+          name: 'Piri Piri Chicken',
+          category: 'portuguese',
+          price: 720,
+          description: 'Fiery Portuguese-style grilled chicken.',
+          recommended: false,
+          bestSeller: false,
+          seasonal: true,
+          spicyLevel: 3
+        }
+      ] as MenuItem[]);
+
+      setSubscribers([
+        { id: '1', email: 'guest@example.com', subscribedAt: new Date().toISOString() },
+        { id: '2', email: 'foodie@example.com', subscribedAt: new Date().toISOString() }
+      ]);
+
+      setApplications([
+        {
+          id: '1',
+          name: 'Alex Fernandes',
+          email: 'alex@example.com',
+          phone: '9876543210',
+          jobTitle: 'Chef',
+          experience: '5 Years',
+          coverLetter: 'Looking forward to joining.',
+          resumeUrl: '#',
+          status: 'Pending'
+        }
+      ]);
+
+      setIsLoadingData(false);
+      return;
+    }
+
+    // ===========================
+    // Real Backend
+    // ===========================
     try {
       const headers = { 'Authorization': `Bearer ${token}` };
 
@@ -181,21 +339,25 @@ export default function AdminSection() {
 
   // Verify token on mount or on change
   useEffect(() => {
-    if (token) {
-      fetch('/api/auth/me', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      .then(res => {
-        if (res.ok) return res.json();
-        else throw new Error('Session expired');
-      })
-      .then(data => {
-        setUser(data.user);
-      })
-      .catch(() => {
-        handleLogout();
-      });
+    if (!token) return;
+
+    if (PORTFOLIO_MODE) {
+      return;
     }
+
+    fetch('/api/auth/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => {
+      if (res.ok) return res.json();
+      else throw new Error('Session expired');
+    })
+    .then(data => {
+      setUser(data.user);
+    })
+    .catch(() => {
+      handleLogout();
+    });
   }, [token]);
 
   // Load statistical data on tab or filter change
@@ -207,6 +369,10 @@ export default function AdminSection() {
 
   // Handle Reservation status updates
   const handleUpdateResStatus = async (id: string, newStatus: string) => {
+    if (PORTFOLIO_MODE) {
+      setReservations(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r));
+      return;
+    }
     try {
       const res = await fetch(`/api/reservations/${id}`, {
         method: 'PUT',
@@ -232,6 +398,12 @@ export default function AdminSection() {
   // Handle Reservation deletion
   const handleDeleteRes = async (id: string) => {
     if (!window.confirm('Are you absolutely sure you want to remove this fine-dining record?')) return;
+
+    if (PORTFOLIO_MODE) {
+      setReservations(prev => prev.filter(r => r.id !== id));
+      return;
+    }
+
     try {
       const res = await fetch(`/api/reservations/${id}`, {
         method: 'DELETE',
@@ -252,6 +424,38 @@ export default function AdminSection() {
   // Handle Menu form submission (Create or Edit)
   const handleMenuSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (PORTFOLIO_MODE) {
+      if (editingMenuItem) {
+        setMenuItems(prev => prev.map(m => m.id === editingMenuItem.id ? {
+          ...m,
+          ...menuFormData,
+          price: Number(menuFormData.price),
+          spicyLevel: Number(menuFormData.spicyLevel)
+        } as MenuItem : m));
+      } else {
+        setMenuItems(prev => [...prev, {
+          ...menuFormData,
+          id: String(Date.now()),
+          price: Number(menuFormData.price),
+          spicyLevel: Number(menuFormData.spicyLevel)
+        } as MenuItem]);
+      }
+      setShowMenuForm(false);
+      setEditingMenuItem(null);
+      setMenuFormData({
+        name: '',
+        category: 'starters',
+        price: '',
+        description: '',
+        recommended: false,
+        bestSeller: false,
+        seasonal: false,
+        spicyLevel: 0
+      });
+      return;
+    }
+
     try {
       const url = editingMenuItem ? `/api/menu/${editingMenuItem.id}` : '/api/menu';
       const method = editingMenuItem ? 'PUT' : 'POST';
@@ -311,6 +515,12 @@ export default function AdminSection() {
   // Delete Menu Item
   const handleDeleteMenuItem = async (id: string) => {
     if (!window.confirm('Delete this dish from the digital catalog?')) return;
+
+    if (PORTFOLIO_MODE) {
+      setMenuItems(prev => prev.filter(m => m.id !== id));
+      return;
+    }
+
     try {
       const res = await fetch(`/api/menu/${id}`, {
         method: 'DELETE',
@@ -334,6 +544,17 @@ export default function AdminSection() {
     if (!replyMessageId || !replyText) return;
 
     setIsSubmittingReply(true);
+
+    if (PORTFOLIO_MODE) {
+      setTimeout(() => {
+        setMessages(prev => prev.map(m => m.id === replyMessageId ? { ...m, replyText, status: 'Replied' } : m));
+        setReplyMessageId(null);
+        setReplyText('');
+        setIsSubmittingReply(false);
+      }, 600);
+      return;
+    }
+
     try {
       const res = await fetch(`/api/contact/${replyMessageId}/reply`, {
         method: 'PUT',
@@ -363,6 +584,95 @@ export default function AdminSection() {
 
   const fetchManagers = async () => {
     if (!token || user?.role !== 'Admin') return;
+
+    // ===========================
+    // Portfolio Demo Mode
+    // ===========================
+    if (PORTFOLIO_MODE) {
+      const demoManagers = [
+        {
+          id: '2',
+          name: "Clara D'Souza",
+          email: 'clara@colacohut.com',
+          phone: '9876500000',
+          username: 'clarad',
+          department: 'Management',
+          status: 'Active',
+          loginCount: 14,
+          lastLogin: new Date().toISOString(),
+          notes: 'Reliable weekday lead. Handles VIP bookings personally.',
+          profileImage: '',
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 120).toISOString()
+        },
+        {
+          id: '3',
+          name: 'Marco Pinto',
+          email: 'marco@colacohut.com',
+          phone: '9822233344',
+          username: 'marcop',
+          department: 'Culinary',
+          status: 'Active',
+          loginCount: 9,
+          lastLogin: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+          notes: '',
+          profileImage: '',
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60).toISOString()
+        },
+        {
+          id: '4',
+          name: 'Anita Rebello',
+          email: 'anita@colacohut.com',
+          phone: '9812309876',
+          username: 'anitar',
+          department: 'Guest Relations',
+          status: 'Inactive',
+          loginCount: 3,
+          lastLogin: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString(),
+          notes: 'On extended leave.',
+          profileImage: '',
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 20).toISOString()
+        }
+      ];
+
+      // Apply search / status filter / sort locally so the controls still feel real
+      let filtered = demoManagers.filter(m => {
+        const matchesSearch = !managerSearch ||
+          m.name.toLowerCase().includes(managerSearch.toLowerCase()) ||
+          m.email.toLowerCase().includes(managerSearch.toLowerCase()) ||
+          (m.department || '').toLowerCase().includes(managerSearch.toLowerCase());
+        const matchesStatus = managerStatusFilter === 'All' || m.status === managerStatusFilter;
+        return matchesSearch && matchesStatus;
+      });
+
+      filtered = filtered.sort((a: any, b: any) => {
+        let cmp = 0;
+        if (managerSortBy === 'name') cmp = a.name.localeCompare(b.name);
+        else if (managerSortBy === 'createdAt') cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        return managerSortOrder === 'asc' ? cmp : -cmp;
+      });
+
+      setManagerStats({
+        total: demoManagers.length,
+        active: demoManagers.filter(m => m.status === 'Active').length,
+        inactive: demoManagers.filter(m => m.status === 'Inactive').length,
+        suspended: demoManagers.filter(m => m.status === 'Suspended').length,
+        online: 1,
+        loggedInToday: 2,
+        recentlyAdded: demoManagers.slice(0, 3)
+      });
+
+      setManagersData({
+        items: filtered,
+        totalCount: filtered.length,
+        totalPages: 1,
+        page: 1
+      });
+      return;
+    }
+
+    // ===========================
+    // Real Backend
+    // ===========================
     try {
       const headers = { 'Authorization': `Bearer ${token}` };
 
@@ -421,6 +731,26 @@ export default function AdminSection() {
         setManagerFormError('Password must be at least 6 characters.');
         return;
       }
+    }
+
+    if (PORTFOLIO_MODE) {
+      setShowManagerForm(false);
+      setEditingManager(null);
+      setManagerFormData({
+        name: '',
+        email: '',
+        phone: '',
+        username: '',
+        password: '',
+        confirmPassword: '',
+        department: 'Management',
+        profileImage: '',
+        status: 'Active',
+        notes: ''
+      });
+      // Simulated success — in demo mode changes aren't persisted to a backend
+      alert('Demo mode: manager profile changes are simulated and not saved to a real database.');
+      return;
     }
 
     try {
@@ -514,6 +844,17 @@ export default function AdminSection() {
   };
 
   const handleUpdateManagerStatus = async (id: string, newStatus: string) => {
+    if (PORTFOLIO_MODE) {
+      setManagersData((prev: any) => ({
+        ...prev,
+        items: prev.items.map((m: any) => m.id === id ? { ...m, status: newStatus } : m)
+      }));
+      if (selectedProfileManager && selectedProfileManager.id === id) {
+        setSelectedProfileManager((prev: any) => ({ ...prev, status: newStatus }));
+      }
+      return;
+    }
+
     try {
       const res = await fetch(`/api/managers/${id}/status`, {
         method: 'PUT',
@@ -544,6 +885,50 @@ export default function AdminSection() {
     setProfileActivityLogs([]);
     setProfileLoginHistory([]);
     setProfileLogsLoading(true);
+
+    if (PORTFOLIO_MODE) {
+      setTimeout(() => {
+        setProfileActivityLogs([
+          {
+            id: 'a1',
+            action: 'RESERVATION_UPDATED',
+            details: 'Marked reservation R001 as Confirmed',
+            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+            ipAddress: '192.168.1.24',
+            browser: 'Chrome',
+            device: 'Desktop'
+          },
+          {
+            id: 'a2',
+            action: 'MENU_ITEM_ADDED',
+            details: 'Added "Piri Piri Chicken" to Portuguese Classics',
+            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
+            ipAddress: '192.168.1.24',
+            browser: 'Chrome',
+            device: 'Desktop'
+          }
+        ]);
+        setProfileLoginHistory([
+          {
+            id: 'l1',
+            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+            ipAddress: '192.168.1.24',
+            browser: 'Chrome',
+            device: 'Desktop'
+          },
+          {
+            id: 'l2',
+            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 29).toISOString(),
+            ipAddress: '192.168.1.24',
+            browser: 'Safari',
+            device: 'Mobile'
+          }
+        ]);
+        setProfileLogsLoading(false);
+      }, 500);
+      return;
+    }
+
     try {
       const headers = { 'Authorization': `Bearer ${token}` };
       const [activityRes, loginRes] = await Promise.all([
@@ -566,6 +951,16 @@ export default function AdminSection() {
 
   const handleDeleteManager = async (id: string) => {
     if (!window.confirm('Are you absolutely sure you want to permanently revoke this Manager access and delete this profile? This action is irreversible.')) return;
+
+    if (PORTFOLIO_MODE) {
+      setManagersData((prev: any) => ({
+        ...prev,
+        items: prev.items.filter((m: any) => m.id !== id),
+        totalCount: Math.max(0, prev.totalCount - 1)
+      }));
+      return;
+    }
+
     try {
       const res = await fetch(`/api/managers/${id}`, {
         method: 'DELETE',
@@ -591,6 +986,15 @@ export default function AdminSection() {
     }
     if (resetPasswordValue !== resetPasswordConfirm) {
       alert('Passwords do not match.');
+      return;
+    }
+
+    if (PORTFOLIO_MODE) {
+      setShowResetPasswordModal(false);
+      setResettingPasswordManagerId(null);
+      setResetPasswordValue('');
+      setResetPasswordConfirm('');
+      alert('Demo mode: password reset simulated (not persisted to a real database).');
       return;
     }
 
@@ -730,8 +1134,7 @@ export default function AdminSection() {
                         </div>
                         <div 
                           onClick={() => handleCopy('ColacoHutAdmin2026!', 'admin_pass')}
-                          className="flex justify-between items-center bg-white/[0.02] hover:bg-white/[0.06] border border-white/5 px-2.5 py-1.5 rounded-none cursor-pointer transition-colors"
-                        >
+                          className="flex justify-between items-center bg-white/[0.02] hover:bg-white/[0.06] border border-white/5 px-2.5 py-1.5 rounded-none cursor-pointer transition-colors">
                           <span className="text-white/70 font-mono text-[11px]">ColacoHutAdmin2026!</span>
                           {copiedType === 'admin_pass' ? (
                             <Check className="w-3 h-3 text-green-400" />
